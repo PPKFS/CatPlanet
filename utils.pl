@@ -7,6 +7,8 @@
 	remove_head/2
 	]).
 
+:- type number ---> float ; integer.
+
 console_size_full(Console, W, H) :-
 	call(Console, W, H, _).
 

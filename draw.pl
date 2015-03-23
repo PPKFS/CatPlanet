@@ -1,7 +1,8 @@
 :- module(draw, 
 	[
 	draw_border/1,
-	draw_main/1
+	draw_main/1,
+	draw_line/6
 	]).
 
 :- use_module(library(console)).
@@ -22,6 +23,20 @@ draw_main(State):-
 	blit(map, 0, 0, 0, 0, root, 0, 0),
 	flush.
 
+draw_line(Console, _, X, Y, 0, Col) :-
+	set_char_background(Console, X, Y, Col).
+
+draw_line(Console, v, X, Y, L, Col) :-
+	set_char_background(Console, X, Y, Col),
+	L1 is L-1,
+	Y1 is Y+1,
+	draw_line(Console, v, X, Y1, L1, Col).
+
+draw_line(Console, h, X, Y, L, Col) :-
+	set_char_background(Console, X, Y, Col),
+	L1 is L-1,
+	X1 is X+1,
+	draw_line(Console, h, X1, Y, L1, Col).
 
 draw_border(Console, 0, 0, Col) :-
 	set_char_background(Console, 0, 0, Col).

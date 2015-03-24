@@ -21,7 +21,7 @@ get_allotted([], Y, [Y]).
 get_allotted(X, [], [X]).
 get_allotted(X, Y, [X, Y]).
 
-%% empty([]:list) is semidet.
+%% empty([]:list) is semi.
 empty([]).
 
 %% generate_roads(CitySize:area, MinArea:positive_integer, MaxArea:positive_integer, Allotted:list(area), Roads:list(area)) is det.

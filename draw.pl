@@ -1,17 +1,16 @@
 :- module(draw, 
 	[
 	draw_border/1,
-	draw_main/1,
+	draw_main/0,
 	draw_line/6
 	]).
 
 :- use_module(library(console)).
 :- use_module(library(color)).
 
-draw_main(State):-
-	console_size(main, W, H),
-	console_size(command, CW, CH, CB),
-	console_size(info, IW, IH),
+draw_main:-
+	console_size(command, _, CH, CB),
+	console_size(info, IW, _),
 	PromptY is CH-CB,
 	putchar(command, CB, PromptY, '>'),
 	draw_border(command),

@@ -14,7 +14,7 @@ read_char(Char):-
 		key_to_char(Key, Char)
 		;
 		window_is_closed, !, nl,
-		halt
+		abort
 		;
 		fail
 	).

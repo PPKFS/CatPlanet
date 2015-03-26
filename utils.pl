@@ -4,7 +4,8 @@
 	console_size_full/4,
 	console_size/3,
 	console_size/4,
-	remove_head/2
+	remove_head/2,
+	optionally/1
 	]).
 
 :- type number ---> float ; integer.
@@ -26,3 +27,8 @@ console_size(Console, W, H, B) :-
 	H is H1-1.
 
 remove_head([_|T], T).
+
+optionally(X) :-
+	call(X)
+	;
+	true.

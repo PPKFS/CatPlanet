@@ -1,8 +1,7 @@
-:- use_module(library(console)).
-:- use_module(library(color)).
-:- use_module(library(events)).
+:- use_module(library(tcod)).
 :- use_module(library(mavis)).
 :- use_module(library(typedef)).
+
 
 :- use_module(draw).
 :- use_module(input).
@@ -11,7 +10,7 @@
 :- use_module(things).
 
 
-main(80, 60, 0).
+main(150, 80, 0).
 command(60, 40, 1).
 info(21, 40, 1).
 map(80, 21, 1).
@@ -26,7 +25,7 @@ update_main(Action):-
 
 %% run_loop is det.
 run_loop:-
-	draw_main,
+	%%draw_main, 
 	input_main(Action),
 	update_main(Action),
 	run_loop.
@@ -36,76 +35,61 @@ run:-
 	init_main,
 	run_loop.
 
-name_junction(point(X, Y), Name) :-
-	atomic_list_concat([X, ' Street -', Y, ' Street Junction'], Name).
+centralise(Heightmap, W, H, X, Y) :-
+	Rat is W/H,
+	Dist is ((2*(X-(W/2))/(W-1)) ** 2) + ((2*(Y-(H/2))/(H-1)) ** 2),
+	heightmap_get_value(Heightmap, X, Y, V),
+	Thresh is Dist/2,
+	(
+		(V >= Thresh),
+		NV is V * 3 * (2-Dist),
+		heightmap_set_value(Heightmap, X, Y, NV)
+		;
+		V < Thresh,
+		NV is V * 2 * (2-Dist),
+		heightmap_set_value(Heightmap, X, Y, NV)
+	).
 
-id_junction(point(X, Y), ID) :-
-	atomic_list_concat(['Junction', X, '-', Y], ID).
-
-make_junctions([], []).
-
-make_junctions([LJ, RJ|Js], [LID, RID|IDs]) :-
-	name_junction(LJ, LName),
-	name_junction(RJ, RName),
-	id_junction(LJ, LID),
-	id_junction(RJ, RID),
-	load_fact(dig(LName, LID)),
-	load_fact(dig(RName, RID)),
-	make_junctions(Js, IDs).
-
-make_roads([], []).
-
-make_roads([area(X1, X2, Y1, Y2)|Roads], [RID|RIDs]) :-
-	1 is Y2-Y1,
-	id_junction(point(X1, Y1), LeftID),
-	id_junction(point(X2, Y1), RightID),
-	load_fact(dig_passageway('Street', LeftID, RightID, RID)),
-	make_roads(Roads, RIDs).
-
-make_roads([area(X1, X2, Y1, Y2)|Roads], [RID|RIDs]) :-
-	1 is X2-X1,
-	id_junction(point(X1, Y1), LeftID),
-	id_junction(point(X1, Y2), RightID),
-	load_fact(dig_passageway('Street', LeftID, RightID, RID)),
-	make_roads(Roads, RIDs).
-
-%% test_city is det.
-test_city :-
-	things:init_database,
-	generate_roads(area(0, 100, 0, 80), 6, 60, Areas, Roads, Junctions),
-	make_junctions(Junctions, JIDs),
-	make_roads(Roads, RIDs),
-	init_root(100, 80, 'City Test', false),
-	create_console(city, 100,  80),
-	draw_roads(Roads),
-	input_main(_, _).
-
-%% draw_roads(List:list(area)) is det.
-draw_roads([]) :-
-	blit(city, 0, 0, 0, 0, root, 0, 0),
+create_world :-
+	create_heightmap(world,  150, 80),
+	add_noise(world, 3, 3, 0, 0, 16, 0.5, 10),
+	scale_noise(world, 0.2, 0.2, 100, 0, 6, 0.5, 0.7),
+	normalize(world, 0, 1),
+	add_noise(world, 2, 2, 0, 0, 6, 0.5, 4),
+	normalize(world, 0.3, 1.3),
+	scale_noise(world, 2, 2, 0, 0, 6, 0.5, 0.5),
+	normalize(world, 0, 1),
+	%%heightmap_add_value(world, 0.4),
+	%%normalize(world, 0, 1),
+	foreach_heightmap(world, 150, 80, centralise),
+	normalize(world, 0, 1),
+	!,
+	tcod:tcod_gen_map(8, [
+		color(0, 0, 50), 
+		color(30, 30, 170),
+		color(114, 150, 71),
+		color(80, 120, 10),
+		color(17, 109, 7),
+		color(120, 220, 120),
+		color(208, 208, 239),
+		color(255, 255, 255)],
+		[0, 60, 68, 100, 140, 210, 220, 256], ColMap),
+	foreach_heightmap(world, 150, 80, draw_heightmap(ColMap)),
 	flush.
 
-draw_roads([area(X1, X2, Y1, Y2)|Rs]) :-
-	color(lighter_green, Col1),
-	color(darker_green, Col2),
-	W is X2-X1,
-	H is Y2-Y1,
-	(
-		H = 1,
-		draw_line(city, h, X1, Y1, W, Col1)
-		;
-		draw_line(city, v, X1, Y1, H, Col2)
-	),
-	draw_roads(Rs).
+get_color(Val, ColMap, Color) :-
+	nth0(Val, ColMap, Color).
 
-create_city :-
-	generate_roads(area(0, 100, 0, 80), 6, 60, Areas, Roads, Junctions),
-	make_junctions(Junctions, JIDs),
-	make_roads(Roads, RIDs).
+draw_heightmap(Cols, Heightmap, W, H, X, Y) :-
+	heightmap_get_value(Heightmap, X, Y, Val),
+	Val2 is round(Val*255),
+	get_color(Val2, Cols, Color), !,
+	set_char_background(X, Y, Color).
+
 
 %% go is det.
 go :-
-	things:init_database,
+	%%things:init_database,
 	console_size_full(main, W, H),
 	console_size_full(command, MW, MH),
 	console_size_full(info, IW, IH),
@@ -114,5 +98,5 @@ go :-
 	create_console(command, MW, MH),
 	create_console(info, IW, IH),
 	create_console(map, MaW, MaH),
-	create_city,
-	run.
+	create_world.
+	%%run.

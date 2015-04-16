@@ -1,11 +1,10 @@
 :- module(input, 
 	[
 	read_word/2,
-	input_main/2
+	input_main/1
 	]).
 
-:- use_module(library(console)).
-:- use_module(library(events)).
+:- use_module(library(tcod)).
 
 read_char(Char):-
 	repeat,
@@ -25,7 +24,7 @@ write_input_to_console(CharList):-
 	console_size(command, _, H),
 	H1 is H-1,
 	print(command, 2, H1, Str),
-	draw_main(_).
+	draw_main.
 
 read_word(Chars, Word):-
 	read_char(Char),
@@ -44,6 +43,6 @@ read_word(Chars, Word):-
 		read_word(NewStr, Word)
 	).
 
-input_main(State, Action):-
+input_main(Action):-
 	read_word([], Word),
 	write(Word), nl.

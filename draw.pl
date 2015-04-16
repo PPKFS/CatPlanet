@@ -5,8 +5,7 @@
 	draw_line/6
 	]).
 
-:- use_module(library(console)).
-:- use_module(library(color)).
+:- use_module(library(tcod)).
 
 draw_main:-
 	console_size(command, _, CH, CB),

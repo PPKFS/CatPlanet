@@ -1,7 +1,7 @@
 #! /bin/bash
-cd ../libtcod-pl
-make
+cd ../blt-pl
+make blt2
 cd ../CatPlanet
-cp -r ../libtcod-pl/lib lib/
-cp ../libtcod-pl/tcod.pl lib/
+cp -r ../blt-pl/lib lib/
+cp ../blt-pl/bearlibterminal.pl lib/
 swipl main.pl

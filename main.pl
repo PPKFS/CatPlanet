@@ -1,7 +1,7 @@
 :- use_module(library(tcod)).
 :- use_module(library(mavis)).
 :- use_module(library(typedef)).
-
+:- use_module(library(bearlibterminal)).
 
 :- use_module(draw).
 :- use_module(input).
@@ -9,11 +9,6 @@
 :- use_module(citygen).
 :- use_module(things).
 
-
-main(160, 90, 0).
-command(60, 40, 1).
-info(21, 40, 1).
-map(80, 21, 1).
 
 %% init_main is det.
 init_main:-
@@ -93,7 +88,8 @@ make_gradient(Radius, Grad, W, H, X, Y) :-
 	).
 
 create_world :-
-	main(W, H, _),
+	W is 200,
+	H is 50,
 	create_heightmap(world, W, H),
 	add_noise(world, 3, 3, 0, 0, 16, 0.5, 10),
 	scale_noise(world, 0.2, 0.2, 100, 0, 6, 0.5, 0.7),
@@ -106,8 +102,6 @@ create_world :-
 	normalize(world, 0, 1),
 	create_heightmap(gradient, W, H),
 	foreach_heightmap(gradient, W, H, make_gradient(0.9)),
-	
-
 	create_heightmap(moisture, W, H),
 	add_noise(moisture, 4, 4, 0, 0, 16, 0.5, 5),
 	normalize(moisture, 0, 1),
@@ -117,9 +111,8 @@ create_world :-
 	normalize(temperature, 0, 1),
 	normalize(world, 0, 1),
 	generate_colormap(ColMap),
-	%%foreach_heightmap(gradient, W, H, draw_heightmap),
 	foreach_heightmap(world, W, H, draw_heightmap(temperature,moisture, ColMap)),
-	flush.
+	terminal_refresh.
 
 get_color(Val, ColMap, Color) :-
 	nth0(Val, ColMap, Color).
@@ -140,15 +133,12 @@ get_color(Val2, TV, MV, _, color(242, 244, 223)) :-
 get_color(Val2, TV, MV, _, color(137, 141, 69)) :-
 	TV > 0.75,
 	MV < 0.5.
-
-
 get_color(Val2, TV, MV, _, color(45,  142, 32)) :-
 	TV > 0.5,
 	MV < 0.5.
 get_color(Val2, TV, MV, _, color(48, 63, 46)) :-
 	TV =< 0.5,
 	MV < 0.75.
-
 get_color(Val2, TV, MV, _, color(24, 97, 15)) :-
 	TV > 0.75,
 	MV < 0.75.
@@ -162,7 +152,6 @@ get_color(Val2, TV, MV, _, color(16, 105, 4)) :-
 	MV >= 0.75.
 
 get_color(Val2, TV, MV, _, color(86, 141, 79)).
-
 
 draw_heightmap(Heightmap, W, H, X, Y) :-
 	heightmap_get_value(Heightmap, X, Y, Val),
@@ -184,14 +173,15 @@ draw_heightmap(Temp, Moisture, Colmap, Heightmap, W, H, X, Y) :-
 	get_color(Val2, TV2, MV, Colmap, Color1),
 	get_color(Val2, Colmap, Color2),
 	lerp(Color1, Color2, 0.8, Color),
-	%%get_color(Val2, Colmap, Color),
 	!,
-	set_char_background(X, Y, Color).
-
+	terminal_bkcolor(Color),
+	terminal_print(X, Y, " ").
 
 %% go is det.
 go :-
-	%%things:init_database,
-	console_size_full(main, W, H),
-	init_root(W, H, 'Cat Planet', false),
-	create_world.
+	terminal_open,
+	terminal_set("window: size=200x50, cellsize=auto, title='Omni: Menu'; font=default"),
+	terminal_color(color(255, 255, 255, 255)),
+	terminal_clear,
+	create_world,
+	terminal_refresh.
